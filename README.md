@@ -2,6 +2,7 @@
 
 This project is a small collection of mini-games written in plain HTML, CSS and JavaScript. Open `index.html` in any modern browser to play.
 
+The CSS and JavaScript code live in `style.css` and `script.js` for easier maintenance.
 ## Games
 - **Elemental Bending Practice** – drag elemental symbols to their quadrants.
 - **Sunflower Bloom** – plant seeds by tapping to grow a garden.
