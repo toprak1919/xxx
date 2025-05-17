@@ -179,6 +179,11 @@
                     <p class="game-description">Yip yip! Drag Appa to navigate the skies, dodge Fire Nation ships, and collect Sky Biscuits. Survive for 60s or get 15 biscuits!</p>
                     <button class="play-button w-full" onclick="showGame('appasSkyJourney')">Play Appa's Sky Journey</button>
                 </div>
+                <div class="game-card">
+                    <h3 class="game-title">Momo Fruit Catch</h3>
+                    <p class="game-description">Help Momo grab the falling fruit by dragging him around. Catch 10 before missing 3!</p>
+                    <button class="play-button w-full" onclick="showGame('momoFruitCatch')">Play Momo Fruit Catch</button>
+                </div>
             </div>
         </div>
 
@@ -246,6 +251,18 @@
             </div>
             <p id="appasSkyJourney-score" class="mt-4 text-lg text-gray-700">Biscuits: 0 / 15 | Hits: 0 / 3 | Time: 0s</p>
         </div>
+        <div id="momoFruitCatch-container" class="game-view hidden">
+            <h2 class="text-2xl font-bold mb-4 text-center text-amber-600">Momo Fruit Catch</h2>
+            <div class="canvas-container">
+                <canvas id="momoFruitCatch-canvas" class="game-canvas w-full h-full"></canvas>
+                <div id="momoFruitCatch-message" class="game-message-overlay hidden"></div>
+            </div>
+            <div class="game-controls text-center">
+                <button id="start-momoFruitCatch" class="game-button start-game-button">Start Game</button>
+                <button class="game-button back-to-hub-button" onclick="showHub()">Back to Hub</button>
+            </div>
+            <p id="momoFruitCatch-score" class="mt-4 text-lg text-gray-700">Fruits: 0 / 10 | Missed: 0 / 3</p>
+        </div>
     </div>
 
     <script>
@@ -260,7 +277,7 @@
         let globalDragState = { isDragging: false, item: null, offsetX: 0, offsetY: 0, gameId: null, pathPoints: [] };
 
 
-        const gameIds = ['elementalBending', 'sunflowerBloom', 'cabbageCartChaos', 'spiritWorldPath', 'appasSkyJourney'];
+        const gameIds = ['elementalBending', 'sunflowerBloom', 'cabbageCartChaos', 'spiritWorldPath', 'appasSkyJourney', 'momoFruitCatch'];
 
         gameIds.forEach(id => {
             gameContainers[id] = document.getElementById(`${id}-container`);
@@ -331,7 +348,7 @@
             canvas.removeEventListener('touchend', handleDragEnd);
             canvas.removeEventListener('touchcancel', handleDragEnd);
 
-            if (['elementalBending', 'cabbageCartChaos', 'spiritWorldPath', 'appasSkyJourney'].includes(gameId)) {
+            if (['elementalBending', 'cabbageCartChaos', 'spiritWorldPath', 'appasSkyJourney', 'momoFruitCatch'].includes(gameId)) {
                 canvas.addEventListener('mousedown', handleDragStart);
                 canvas.addEventListener('mousemove', handleDragging);
                 canvas.addEventListener('mouseup', handleDragEnd);
@@ -406,6 +423,7 @@
                 case 'cabbageCartChaos': initCabbageCartChaos(); break;
                 case 'spiritWorldPath': initSpiritWorldPath(); break;
                 case 'appasSkyJourney': initAppasSkyJourney(); break;
+                case 'momoFruitCatch': initMomoFruitCatch(); break;
             }
             gameLoop(gameId);
         }
@@ -421,6 +439,7 @@
                 case 'cabbageCartChaos': updateCabbageCartChaos(); drawCabbageCartChaos(); break;
                 case 'spiritWorldPath': updateSpiritWorldPath(); drawSpiritWorldPath(); break;
                 case 'appasSkyJourney': updateAppasSkyJourney(); drawAppasSkyJourney(); break;
+                case 'momoFruitCatch': updateMomoFruitCatch(); drawMomoFruitCatch(); break;
             }
 
             if (gameStates[gameId].running) {
@@ -496,6 +515,12 @@
                         globalDragState.offsetX = coords.x - ASJ.appa.x; globalDragState.offsetY = coords.y - ASJ.appa.y;
                     }
                     break;
+                case 'momoFruitCatch':
+                    if (coords.x > MFC.momo.x && coords.x < MFC.momo.x + MFC.momo.width && coords.y > MFC.momo.y && coords.y < MFC.momo.y + MFC.momo.height) {
+                        globalDragState.isDragging = true; globalDragState.item = MFC.momo;
+                        globalDragState.offsetX = coords.x - MFC.momo.x; globalDragState.offsetY = coords.y - MFC.momo.y;
+                    }
+                    break;
             }
         }
 
@@ -513,8 +538,8 @@
             } else if (globalDragState.item) {
                 globalDragState.item.x = coords.x - globalDragState.offsetX;
                 globalDragState.item.y = coords.y - globalDragState.offsetY;
-                if (gameId === 'appasSkyJourney') { // Constrain Appa
-                    const canvas = canvases.appasSkyJourney;
+                if (gameId === 'appasSkyJourney' || gameId === 'momoFruitCatch') {
+                    const canvas = canvases[gameId];
                     globalDragState.item.x = Math.max(0, Math.min(canvas.width - globalDragState.item.width, globalDragState.item.x));
                     globalDragState.item.y = Math.max(0, Math.min(canvas.height - globalDragState.item.height, globalDragState.item.y));
                 }
@@ -1006,6 +1031,66 @@
             document.getElementById('appasSkyJourney-score').textContent = `Biscuits: ${ASJ.biscuitsCollected} / ${ASJ.targetBiscuits} | Hits: ${ASJ.hits} / ${ASJ.maxHits} | Time: ${ASJ.gameTime}s`;
         }
 
+        // --- Momo Fruit Catch ---
+        const MFC = {};
+        function initMomoFruitCatch() {
+            const canvas = canvases.momoFruitCatch;
+            MFC.momo = { x: canvas.width / 2 - 20, y: canvas.height - 50, width: 40, height: 40, color: '#F5CBA7' };
+            MFC.fruits = [];
+            MFC.spawnInterval = 1200;
+            MFC.lastSpawn = 0;
+            MFC.fruitSpeed = 2;
+            MFC.fruitsCaught = 0;
+            MFC.targetFruits = 10;
+            MFC.missed = 0;
+            MFC.maxMissed = 3;
+            gameStates.momoFruitCatch.score = 0;
+            updateMomoFruitCatchScoreDisplay();
+        }
+        function updateMomoFruitCatch() {
+            if (gameStates.momoFruitCatch.gameOver) return;
+            const canvas = canvases.momoFruitCatch; const now = Date.now();
+            if (now - MFC.lastSpawn > MFC.spawnInterval) {
+                MFC.fruits.push({ x: Math.random() * (canvas.width - 20) + 10, y: -20, radius: 10, color: '#FF6347' });
+                MFC.lastSpawn = now;
+            }
+            for (let i = MFC.fruits.length - 1; i >= 0; i--) {
+                const f = MFC.fruits[i];
+                f.y += MFC.fruitSpeed;
+                if (f.y > canvas.height + f.radius) {
+                    MFC.fruits.splice(i, 1);
+                    MFC.missed++;
+                    if (MFC.missed >= MFC.maxMissed) {
+                        gameStates.momoFruitCatch.gameOver = true;
+                        displayGameMessage('momoFruitCatch', `Too Many Missed!<br>Game Over!`);
+                        stopGame('momoFruitCatch');
+                    }
+                    continue;
+                }
+                if (f.x > MFC.momo.x && f.x < MFC.momo.x + MFC.momo.width && f.y + f.radius > MFC.momo.y && f.y - f.radius < MFC.momo.y + MFC.momo.height) {
+                    MFC.fruits.splice(i, 1);
+                    MFC.fruitsCaught++; gameStates.momoFruitCatch.score++;
+                    if (MFC.fruitsCaught >= MFC.targetFruits) {
+                        gameStates.momoFruitCatch.gameOver = true;
+                        displayGameMessage('momoFruitCatch', `Great Job!<br>Fruits: ${MFC.fruitsCaught}`);
+                        stopGame('momoFruitCatch');
+                    }
+                }
+            }
+            updateMomoFruitCatchScoreDisplay();
+        }
+        function drawMomoFruitCatch() {
+            const ctx = contexts.momoFruitCatch; const canvas = canvases.momoFruitCatch; if (!ctx || !canvas) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#87CEEB'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = MFC.momo.color;
+            ctx.fillRect(MFC.momo.x, MFC.momo.y, MFC.momo.width, MFC.momo.height);
+            MFC.fruits.forEach(f => { ctx.fillStyle = f.color; ctx.beginPath(); ctx.arc(f.x, f.y, f.radius, 0, Math.PI*2); ctx.fill(); });
+        }
+        function updateMomoFruitCatchScoreDisplay() {
+            document.getElementById('momoFruitCatch-score').textContent = `Fruits: ${MFC.fruitsCaught} / ${MFC.targetFruits} | Missed: ${MFC.missed} / ${MFC.maxMissed}`;
+        }
+
         // --- Window Resize Handling ---
         window.addEventListener('resize', () => {
             gameIds.forEach(id => {
@@ -1022,6 +1107,7 @@
                             case 'cabbageCartChaos': initCabbageCartChaos(); drawCabbageCartChaos(); break;
                             case 'spiritWorldPath': initSpiritWorldPath(); drawSpiritWorldPath(); break; 
                             case 'appasSkyJourney': initAppasSkyJourney(); drawAppasSkyJourney(); break;
+                            case 'momoFruitCatch': initMomoFruitCatch(); drawMomoFruitCatch(); break;
                             default: drawInitialCanvasState(id);
                         }
                          if (wasGameOver) {
