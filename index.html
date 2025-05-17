@@ -95,11 +95,18 @@
             background-color: #546E7A; 
         }
         .start-game-button {
-             background-color: #66BB6A; 
+             background-color: #66BB6A;
              color: white;
         }
         .start-game-button:hover {
-            background-color: #4CAF50; 
+            background-color: #4CAF50;
+        }
+        .restart-button {
+             background-color: #EF5350;
+             color: white;
+        }
+        .restart-button:hover {
+             background-color: #E53935;
         }
         #main-title {
             font-size: 2.5rem; 
@@ -362,11 +369,16 @@
             ctx.fillText('Press Start to Play.', canvas.width / 2, canvas.height / 2 + 20);
         }
 
-        function displayGameMessage(gameId, message, duration = 0) {
+        function displayGameMessage(gameId, message, duration = 0, showRestart = false) {
             const overlay = messageOverlays[gameId];
             if (overlay) {
-                overlay.innerHTML = message; 
+                const restartBtn = showRestart ? `<br><button class="game-button restart-button mt-2">Restart</button>` : '';
+                overlay.innerHTML = message + restartBtn;
                 overlay.classList.remove('hidden');
+                if (showRestart) {
+                    const btn = overlay.querySelector('.restart-button');
+                    if (btn) btn.onclick = () => startGame(gameId);
+                }
                 if (duration > 0) {
                     setTimeout(() => {
                         if (overlay) overlay.classList.add('hidden'); // Check if overlay still exists
@@ -555,7 +567,7 @@
         }
         function spawnNewEBSymbol() {
             if (EB.symbolsSorted >= EB.targetSymbols) {
-                gameStates.elementalBending.gameOver = true; displayGameMessage('elementalBending', `Master Bender!<br>${EB.targetSymbols} Symbols Sorted!`); stopGame('elementalBending'); return;
+                gameStates.elementalBending.gameOver = true; displayGameMessage('elementalBending', `Master Bender!<br>${EB.targetSymbols} Symbols Sorted!`, 0, true); stopGame('elementalBending'); return;
             }
             const canvas = canvases.elementalBending; const elementKeys = Object.keys(ELEMENTS);
             const randomElement = ELEMENTS[elementKeys[Math.floor(Math.random() * elementKeys.length)]];
@@ -616,7 +628,7 @@
             const bloomSize = Math.random() * 15 + 20; const bloomColor = `hsl(${Math.random() * 60 + 20}, 100%, 60%)`;
             SB.blooms.push({ x: coords.x, y: coords.y, size: bloomSize, color: bloomColor, growth: 0.1, maxSize: bloomSize });
             gameStates.sunflowerBloom.score = SB.blooms.length; updateSunflowerBloomScoreDisplay();
-            if (SB.blooms.length >= SB.maxBlooms) { gameStates.sunflowerBloom.gameOver = true; displayGameMessage('sunflowerBloom', `Garden Full! You Win!<br>${SB.maxBlooms} Blooms!`); stopGame('sunflowerBloom');}
+            if (SB.blooms.length >= SB.maxBlooms) { gameStates.sunflowerBloom.gameOver = true; displayGameMessage('sunflowerBloom', `Garden Full! You Win!<br>${SB.maxBlooms} Blooms!`, 0, true); stopGame('sunflowerBloom');}
         }
         function updateSunflowerBloom() { /* ... same as before ... */ 
             if (gameStates.sunflowerBloom.gameOver) return; SB.blooms.forEach(b => { if (b.growth < 1) b.growth = Math.min(1, b.growth + 0.05); });
@@ -663,7 +675,7 @@
         function spawnNewCabbage() {
             if (CCC.cabbagesDelivered >= CCC.targetDeliveries) {
                 gameStates.cabbageCartChaos.gameOver = true;
-                displayGameMessage('cabbageCartChaos', `All Cabbages Delivered!<br>Merchant is Happy!`);
+                displayGameMessage('cabbageCartChaos', `All Cabbages Delivered!<br>Merchant is Happy!`, 0, true);
                 stopGame('cabbageCartChaos');
                 return;
             }
@@ -736,7 +748,7 @@
                         spawnNewCabbage(); // Spawn a new one
                         if (CCC.cabbagesLost >= CCC.maxLost) {
                             gameStates.cabbageCartChaos.gameOver = true;
-                            displayGameMessage('cabbageCartChaos', `Too Many Lost Cabbages!<br>Game Over!`);
+                            displayGameMessage('cabbageCartChaos', `Too Many Lost Cabbages!<br>Game Over!`, 0, true);
                             stopGame('cabbageCartChaos');
                         }
                         break; // Stop checking other obstacles for this frame
@@ -796,7 +808,7 @@
         function generateNewSWPNodes() {
             if (SWP.pathsCompleted >= SWP.targetPaths) {
                 gameStates.spiritWorldPath.gameOver = true;
-                displayGameMessage('spiritWorldPath', `Enlightenment Reached!<br>All Paths Connected!`);
+                displayGameMessage('spiritWorldPath', `Enlightenment Reached!<br>All Paths Connected!`, 0, true);
                 stopGame('spiritWorldPath');
                 return;
             }
@@ -939,7 +951,7 @@
                         itemList.splice(i, 1);
                         if (typeIndex === 0) { // Obstacle
                             ASJ.hits++; displayGameMessage('appasSkyJourney', `Hit! Careful!`, 500);
-                            if (ASJ.hits >= ASJ.maxHits) { gameStates.appasSkyJourney.gameOver = true; displayGameMessage('appasSkyJourney', `Game Over!<br>Appa is tired!`); stopGame('appasSkyJourney'); }
+                            if (ASJ.hits >= ASJ.maxHits) { gameStates.appasSkyJourney.gameOver = true; displayGameMessage('appasSkyJourney', `Game Over!<br>Appa is tired!`, 0, true); stopGame('appasSkyJourney'); }
                         } else { // Biscuit
                             ASJ.biscuitsCollected++; gameStates.appasSkyJourney.score++;
                         }
@@ -948,7 +960,7 @@
             });
             if (!gameStates.appasSkyJourney.gameOver && (ASJ.gameTime >= ASJ.targetTime || ASJ.biscuitsCollected >= ASJ.targetBiscuits)) {
                 gameStates.appasSkyJourney.gameOver = true;
-                displayGameMessage('appasSkyJourney', `Great Journey!<br>Biscuits: ${ASJ.biscuitsCollected}, Time: ${ASJ.gameTime}s`);
+                displayGameMessage('appasSkyJourney', `Great Journey!<br>Biscuits: ${ASJ.biscuitsCollected}, Time: ${ASJ.gameTime}s`, 0, true);
                 stopGame('appasSkyJourney');
             }
             updateAppasSkyJourneyScoreDisplay();
