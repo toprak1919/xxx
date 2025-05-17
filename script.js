@@ -34,6 +34,7 @@ function updateHighScoreDisplay(id){
             if (startButton) {
                 startButton.addEventListener('click', () => startGame(id));
             }
+            updateHighScoreDisplay(id);
         });
         
         function resizeCanvas(canvas) {
@@ -394,8 +395,10 @@ function updateHighScoreDisplay(id){
         function updateElementalBendingScoreDisplay() {
             const timeLeft = EB.currentSymbol ? Math.max(0, (EB.symbolTimeLimit - (Date.now() - EB.symbolTimer)) / 1000).toFixed(1) : (EB.symbolTimeLimit/1000).toFixed(1);
             document.getElementById("elementalBending-score").textContent = `Symbols Sorted: ${gameStates.elementalBending.score} / ${EB.targetSymbols} | Time Left: ${timeLeft}s | Best: ${getHighScore("elementalBending")}`;
+        }
+
         // --- Sunflower Bloom Clicker (Largely Unchanged) ---
-        const SB = {}; 
+        const SB = {};
         function initSunflowerBloom() { /* ... same as before ... */ 
             SB.blooms = []; SB.maxBlooms = 15; gameStates.sunflowerBloom.score = 0; updateSunflowerBloomScoreDisplay();
         }
@@ -425,8 +428,9 @@ function updateHighScoreDisplay(id){
                 }
             });
         }
-        function updateSunflowerBloomScoreDisplay() { /* ... same as before ... */ 
+        function updateSunflowerBloomScoreDisplay() { /* ... same as before ... */
             document.getElementById("sunflowerBloom-score").textContent = `Blooms: ${gameStates.sunflowerBloom.score} / ${SB.maxBlooms} | Best: ${getHighScore("sunflowerBloom")}`;
+        }
 
         // --- Cabbage Cart Chaos ---
         const CCC = {};
